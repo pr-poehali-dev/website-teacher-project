@@ -3,13 +3,15 @@ import Icon from "@/components/ui/icon";
 
 const TEACHER_PHOTO = "https://cdn.poehali.dev/projects/12b21a17-2320-4d9e-bae1-8668ef002a9a/files/b04f1d1a-efca-44ad-98bd-46f49592f3a9.jpg";
 
+const LESSON_PRICE = 700;
+
 const PROGRAMS = [
   {
     id: "start",
     title: "Старт в веб",
     level: "Начинающий",
     duration: "2 месяца",
-    price: "15 000 ₽",
+    lessonsPerMonth: 8,
     modules: ["HTML & CSS основы", "Flexbox и Grid", "Адаптивный дизайн", "Первый сайт-портфолио"],
     desc: "Для тех, кто никогда не писал код. Создадите свой первый сайт с нуля."
   },
@@ -18,7 +20,7 @@ const PROGRAMS = [
     title: "Frontend Pro",
     level: "Средний",
     duration: "4 месяца",
-    price: "28 000 ₽",
+    lessonsPerMonth: 8,
     popular: true,
     modules: ["JavaScript ES6+", "React & TypeScript", "REST API", "Git и деплой"],
     desc: "Для тех, кто знает HTML/CSS. Освоите современный стек и сможете работать в команде."
@@ -28,7 +30,7 @@ const PROGRAMS = [
     title: "Fullstack Master",
     level: "Продвинутый",
     duration: "6 месяцев",
-    price: "45 000 ₽",
+    lessonsPerMonth: 12,
     modules: ["Node.js & Python", "Базы данных", "Облачные сервисы", "Карьерный трекинг"],
     desc: "Полный путь от верстки до серверной части. Станете универсальным разработчиком."
   }
@@ -62,6 +64,7 @@ function useInView() {
 
 export default function Index() {
   const [activeProgram, setActiveProgram] = useState("pro");
+  const [payMode, setPayMode] = useState<"lesson" | "month">("month");
   const [formData, setFormData] = useState({ name: "", phone: "", program: "pro", schedule: "", comment: "" });
   const [submitted, setSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -212,63 +215,101 @@ export default function Index() {
       <section id="programs" className="py-28 bg-[#141414]">
         <div ref={programsRef.ref} className="max-w-6xl mx-auto px-6">
           <div className={`transition-all duration-700 ${programsRef.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="flex items-end justify-between mb-16">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
               <div>
                 <p className="text-xs tracking-[0.2em] uppercase text-[#666] mb-4">Программы обучения</p>
                 <h2 className="font-heading text-5xl font-bold text-white leading-tight">ВЫБЕРИ<br />ПРОГРАММУ</h2>
               </div>
-              <p className="hidden md:block text-[#666] text-sm max-w-xs text-right">
-                Три уровня подготовки — от нуля до профессионального разработчика
-              </p>
+              {/* Переключатель оплаты */}
+              <div className="flex items-center gap-px border border-[#333] self-start md:self-auto">
+                <button
+                  onClick={() => setPayMode("lesson")}
+                  className={`px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ${payMode === "lesson" ? "bg-white text-[#141414]" : "bg-transparent text-[#666] hover:text-white"}`}>
+                  За урок
+                </button>
+                <button
+                  onClick={() => setPayMode("month")}
+                  className={`px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ${payMode === "month" ? "bg-white text-[#141414]" : "bg-transparent text-[#666] hover:text-white"}`}>
+                  За месяц
+                </button>
+              </div>
+            </div>
+
+            {/* Пояснение к режиму */}
+            <div className="mb-8 text-sm text-[#555]">
+              {payMode === "lesson"
+                ? <span>700 ₽ за урок · Занимайтесь в удобном темпе, без обязательств</span>
+                : <span>От 4 уроков в месяц · Фиксированная цена, удобное планирование</span>
+              }
             </div>
 
             <div className="grid md:grid-cols-3 gap-px bg-[#2a2a2a]">
-              {PROGRAMS.map((prog, i) => (
-                <div key={prog.id}
-                  className={`p-8 cursor-pointer transition-all duration-300 ${activeProgram === prog.id ? "bg-white" : "bg-[#1a1a1a] hover:bg-[#222]"}`}
-                  style={{ transitionDelay: `${i * 0.05}s` }}
-                  onClick={() => setActiveProgram(prog.id)}>
-                  <div className="flex items-start justify-between mb-6">
-                    <span className={`text-xs tracking-widest uppercase ${activeProgram === prog.id ? "text-[#999]" : "text-[#555]"}`}>
-                      {prog.level}
-                    </span>
-                    {prog.popular && (
-                      <span className={`text-xs px-2 py-1 ${activeProgram === prog.id ? "bg-[#141414] text-white" : "bg-white/10 text-white"}`}>
-                        Хит
+              {PROGRAMS.map((prog, i) => {
+                const lessonPrice = LESSON_PRICE;
+                const monthPrice = prog.lessonsPerMonth * LESSON_PRICE;
+                const isActive = activeProgram === prog.id;
+                return (
+                  <div key={prog.id}
+                    className={`p-8 cursor-pointer transition-all duration-300 ${isActive ? "bg-white" : "bg-[#1a1a1a] hover:bg-[#222]"}`}
+                    style={{ transitionDelay: `${i * 0.05}s` }}
+                    onClick={() => setActiveProgram(prog.id)}>
+                    <div className="flex items-start justify-between mb-6">
+                      <span className={`text-xs tracking-widest uppercase ${isActive ? "text-[#999]" : "text-[#555]"}`}>
+                        {prog.level}
                       </span>
-                    )}
-                  </div>
-                  <h3 className={`font-heading text-2xl font-bold mb-3 ${activeProgram === prog.id ? "text-[#141414]" : "text-white"}`}>
-                    {prog.title}
-                  </h3>
-                  <p className={`text-sm leading-relaxed mb-6 ${activeProgram === prog.id ? "text-[#666]" : "text-[#666]"}`}>
-                    {prog.desc}
-                  </p>
-                  <div className="space-y-2 mb-8">
-                    {prog.modules.map(m => (
-                      <div key={m} className="flex items-center gap-2 text-sm">
-                        <span className={`w-1 h-1 rounded-full flex-shrink-0 ${activeProgram === prog.id ? "bg-[#141414]" : "bg-[#444]"}`} />
-                        <span className={activeProgram === prog.id ? "text-[#444]" : "text-[#777]"}>{m}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={`pt-6 border-t ${activeProgram === prog.id ? "border-[#e5e5e5]" : "border-[#2a2a2a]"}`}>
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <div className={`text-xs mb-1 ${activeProgram === prog.id ? "text-[#999]" : "text-[#555]"}`}>{prog.duration}</div>
-                        <div className={`font-heading text-2xl font-bold ${activeProgram === prog.id ? "text-[#141414]" : "text-white"}`}>
-                          {prog.price}
+                      {prog.popular && (
+                        <span className={`text-xs px-2 py-1 ${isActive ? "bg-[#141414] text-white" : "bg-white/10 text-white"}`}>
+                          Хит
+                        </span>
+                      )}
+                    </div>
+                    <h3 className={`font-heading text-2xl font-bold mb-3 ${isActive ? "text-[#141414]" : "text-white"}`}>
+                      {prog.title}
+                    </h3>
+                    <p className={`text-sm leading-relaxed mb-6 ${isActive ? "text-[#666]" : "text-[#666]"}`}>
+                      {prog.desc}
+                    </p>
+                    <div className="space-y-2 mb-8">
+                      {prog.modules.map(m => (
+                        <div key={m} className="flex items-center gap-2 text-sm">
+                          <span className={`w-1 h-1 rounded-full flex-shrink-0 ${isActive ? "bg-[#141414]" : "bg-[#444]"}`} />
+                          <span className={isActive ? "text-[#444]" : "text-[#777]"}>{m}</span>
                         </div>
+                      ))}
+                    </div>
+                    <div className={`pt-6 border-t ${isActive ? "border-[#e5e5e5]" : "border-[#2a2a2a]"}`}>
+                      {/* Цена */}
+                      <div className="mb-4">
+                        {payMode === "lesson" ? (
+                          <div>
+                            <div className={`text-xs mb-1 ${isActive ? "text-[#999]" : "text-[#555]"}`}>За 1 урок</div>
+                            <div className={`font-heading text-3xl font-bold ${isActive ? "text-[#141414]" : "text-white"}`}>
+                              {lessonPrice.toLocaleString("ru")} ₽
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className={`text-xs mb-1 ${isActive ? "text-[#999]" : "text-[#555]"}`}>
+                              В месяц · {prog.lessonsPerMonth} уроков
+                            </div>
+                            <div className={`font-heading text-3xl font-bold ${isActive ? "text-[#141414]" : "text-white"}`}>
+                              {monthPrice.toLocaleString("ru")} ₽
+                            </div>
+                            <div className={`text-xs mt-1 ${isActive ? "text-[#bbb]" : "text-[#555]"}`}>
+                              {lessonPrice.toLocaleString("ru")} ₽ / урок · {prog.duration}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <a href="#contact"
                         onClick={() => setFormData(f => ({ ...f, program: prog.id }))}
-                        className={`text-xs font-semibold px-4 py-2 transition-colors ${activeProgram === prog.id ? "bg-[#141414] text-white hover:bg-[#333]" : "border border-[#444] text-[#999] hover:border-white hover:text-white"}`}>
+                        className={`block text-center text-xs font-semibold px-4 py-2.5 transition-colors ${isActive ? "bg-[#141414] text-white hover:bg-[#333]" : "border border-[#444] text-[#999] hover:border-white hover:text-white"}`}>
                         Записаться →
                       </a>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
